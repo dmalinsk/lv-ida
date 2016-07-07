@@ -36,11 +36,11 @@ For example:
 graph: 1<-2<-o3--4
 
 matrix:
-  1 2 3 4
-1 0 3 0 0
-2 2 0 1 0
-3 0 2 0 3
-4 0 0 3 0
+  1 2 3 4 \n
+1 0 3 0 0 \n
+2 2 0 1 0 \n
+3 0 2 0 3 \n
+4 0 0 3 0 \n
 
 No cycles are allowed! Sometimes search algorithms will return cyclic graphs even when that violates the assumption of an acyclic generating structure. 
 The function "iscyclic" in iscyclic.R can be used to check that you have not got a cyclic graph.
