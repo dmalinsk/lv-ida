@@ -2,11 +2,30 @@
 For the implementation of LV-IDA in R
 @author: Daniel Malinsky malinsky@cmu.edu
 
+ "LV-IDA for estimating causal effects with ancestral graph Markov Models."
+ Copyright (C) 2016  Daniel Malinsky
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, version 3 of the License.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 This repository has the code for LV-IDA (Latent Variable IDA). The algorithm is described in:
+
+Daniel Malinsky and Peter Spirtes. “Estimating bounds on causal effects in high-dimensional and possibly confounded systems,” 
+International Journal of Approximate Reasoning 88: 371-384, 2017.
 
 Daniel Malinsky and Peter Spirtes. "Estimating causal effects with ancestral graph Markov models." 
 Journal of Machine Learning Research: Workshop and Conference Proceedings (PGM) 52, 2016. 
-(Proceedings of the International Conference on Probabilistic Graphical Models)
+(Proceedings of the Eighth International Conference on Probabilistic Graphical Models)
 
 It is based on IDA by Maathuis, Kalisch, and Buhlmann. As far as the end-user is concerned, it works just like IDA as implemented in the R package pcalg. 
 See the paper by Kalisch et al. "Causal inference using graphical models with the R package pcalg." Journal of Statistical Software, 47(11):1-26, 2012. 
