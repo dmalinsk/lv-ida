@@ -64,4 +64,4 @@ matrix:
 No cycles are allowed! Sometimes search algorithms will return cyclic graphs even when that violates the assumption of an acyclic generating structure. 
 The function "iscyclic" in iscyclic.R can be used to check that you have not got a cyclic graph.
 
-Try running the code in example.R to get a feel for how LV-IDA works. Write malinsky@cmu.edu with questions/problems.
+Try running the code in example.R to get a feel for how LV-IDA works. Write malinsky@jhu.edu with questions/problems.
