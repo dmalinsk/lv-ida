@@ -1,6 +1,6 @@
 ## requires packages: pcalg, igraph, RGBL
 
-source("lvida_new2.R")
+source("lvida.R")
 
 ### sometimes the algorithms in pcalg can return a cyclic graph (for some alpha setting)
 ### LV-IDA (and IDA) won't work in such cases so this is a script to alert you
