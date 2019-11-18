@@ -813,7 +813,7 @@ lv.ida <- function(x.pos,y.pos,mcov,pag,method="global",nMags=500, localcap=NULL
 	if (verbose) cat("Constructed possible-d-sep set", "\n")
 	# Z_i = union of adj, pdes, and pdsep
 	Z_i <- sort(unique(c(adj,pdes,pdsep)))
-	if (localcap != NULL && length(Z_i)>localcap){
+	if (!is.null(localcap) && length(Z_i)>localcap){
 	  cat("WARNING: cannot localize when calculating the effect of ", x.pos, " on ", y.pos, 
 	      ". Z_i is too big. Size of Z_i = ", length(Z_i), ". Returning NA", "\n")
 	  return(NA)
