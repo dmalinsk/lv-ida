@@ -1,6 +1,6 @@
 # lv-ida
 For the implementation of LV-IDA in R
-@author: Daniel Malinsky malinsky@cmu.edu
+@author: Daniel Malinsky d.malinsky@columbia.edu
 
  "LV-IDA for estimating causal effects with ancestral graph Markov Models."
  Copyright (C) 2016  Daniel Malinsky
@@ -64,4 +64,6 @@ matrix:
 No cycles are allowed! Sometimes search algorithms will return cyclic graphs even when that violates the assumption of an acyclic generating structure. 
 The function "iscyclic" in iscyclic.R can be used to check that you have not got a cyclic graph.
 
-Try running the code in example.R to get a feel for how LV-IDA works. Write malinsky@jhu.edu with questions/problems.
+Try running the code in example.R to get a feel for how LV-IDA works. Write d.malinsky@columbia.edu with questions/problems.
+
+NOTE (Dec 1 2024): an important bug was fixed in late 2024. Among other things, there was a problem in how the "local" version of LV-IDA was implemented, the local set described in the published paper was not actually sufficient to check all the relevant graphical conditions for the backdoor criterion. The update makes this set somewhat larger, which could affect computation time. An erratum describing this change more formally is in development and this page will be updated when that is posted.
