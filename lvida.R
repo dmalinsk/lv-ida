@@ -204,41 +204,106 @@ cond2 <- function(tmp_old,pag,q){
 #i.e., if A-->B in MAG G is transformed into A<->B, check the following:
 #there is no discriminating path for A on which B is the endpoint adjacent to A. 
 #######
-#ff <- memoize(is.discr.path) 
-founddpath <- c()
-is.discr.path <- function (path, pag)
+updateList <- function(path, set, old.list)
 {
-  stopifnot((n <- length(path)) >= 3)
-  if (n > nrow(pag)) return(FALSE)
-
-  pag <- pag
-  c <- path[1]
+  ## Purpose: update the list of all paths in the iterative functions
+  ## minDiscrPath, minUncovCircPath and minUncovPdPath
+  ## ----------------------------------------------------------------------
+  ## Arguments: - path: the path under investigation
+  ##            - set: (integer) index set of variables to be added to path
+  ##            - old.list: the list to update
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 21 Oct 2011; Without for() by Martin Maechler
+  c(old.list, lapply(set, function(s) c(path,s)))
+}
+minDiscrPath.TF <- function(path, pag) ## (pag, a,b,c, verbose = FALSE)
+{
+  ## Purpose: find a minimal discriminating path for a,b,c.
+  ## If a path exists this is the output, otherwise NA
+  ## ----------------------------------------------------------------------
+  ## Arguments: - pag: adjacency matrix
+  ##            - a,b,c: node positions under interest
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 25 Jan 2011; speedup: Martin Maechler
+  ## Modified by DMalinsky to return TRUE when a path is found and FALSE otherwise
+  ## path ends with ... a *-> b *-*c, b is the edge being discriminated and c is the endpoint
+  ## a must be adjacent to b and parent of c
+  
+  c <- path[3]
   b <- path[2]
-  a <- path[3]
-  first.pos <- path[n]
-  del.pos <- path[n - 1]
-  indD <- which(pag[first.pos, ] != 0 &
-                pag[, first.pos] == 2)
-  indD <- setdiff(indD, del.pos)
-  for (d in indD)  if(all(d != path)) {
-    if (pag[c, d] == 0 && pag[d, c] == 0) {
-	### found discr path There is a discriminating path between d and c for b
-		cat("There is a discriminating path between:",
-              d, "and", c, "for", b, "\n")
-		founddpath <- append(founddpath,TRUE)
-		break
-    }
-    else {
-      if (pag[first.pos, d] == 2 && pag[d, c] == 2 && pag[c, d] == 3) {
-        founddpath <- append(founddpath, is.discr.path(path = c(path, d), pag = pag))
-      	if(any(founddpath)==TRUE) break
-      } ## else : keep 'pag'
-    }
-  } ## for( d )
+  a <- path[1]
+  p <- as.numeric(dim(pag)[1])
+  visited <- rep(FALSE, p)
+  visited[c(a,b,c)] <- TRUE # {a,b,c} "visited"
+  ## find all neighbours of a  not visited yet
+  indD <- which(pag[a,] != 0 & pag[,a] == 2 & !visited) ## d *-> a
+  if (length(indD) > 0) {
+    path.list <- updateList(a, indD, NULL)
+    while (length(path.list) > 0) {
+      ## next element in the queue
+      mpath <- path.list[[1]]
+      m <- length(mpath)
+      d <- mpath[m]
+      if (pag[c,d] == 0 & pag[d,c] == 0)
+        ## minimal discriminating path found :
+        return(TRUE) ## return( c(rev(mpath), b,c) ) ## (previously returned the path)
+      
+      ## else :
+      pred <- mpath[m-1]
+      path.list[[1]] <- NULL
+      
+      
+      ## d is connected to c -----> search iteratively
+      if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
+        visited[d] <- TRUE
+        ## find all neighbours of d not visited yet
+        indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
+        if (length(indR) > 0)
+          ## update the queues
+          path.list <- updateList(mpath[-1], indR, path.list)
+      }
+    } ## {while}
+  }
+  ## nothing found:  return
+  return(FALSE) ## NA ## (previously returned NA if no path found)
+} ## {minDiscrPath}
 
-  if(any(founddpath)==TRUE) return(TRUE)
-  else return(FALSE)
-}## {discr.path}
+# DEPRECATED 
+# ff <- memoize(is.discr.path) 
+# founddpath <- c()
+# is.discr.path <- function (path, pag)
+# {
+#   stopifnot((n <- length(path)) >= 3)
+#   if (n > nrow(pag)) return(FALSE)
+# 
+#   pag <- pag
+#   c <- path[1]
+#   b <- path[2]
+#   a <- path[3]
+#   first.pos <- path[n]
+#   del.pos <- path[n - 1]
+#   indD <- which(pag[first.pos, ] != 0 &
+#                 pag[, first.pos] == 2)
+#   indD <- setdiff(indD, del.pos)
+#   for (d in indD)  if(all(d != path)) {
+#     if (pag[c, d] == 0 && pag[d, c] == 0) {
+# 	### found discr path There is a discriminating path between d and c for b
+# 		cat("There is a discriminating path between:",
+#               d, "and", c, "for", b, "\n")
+# 		founddpath <- append(founddpath,TRUE)
+# 		break
+#     }
+#     else {
+#       if (pag[first.pos, d] == 2 && pag[d, c] == 2 && pag[c, d] == 3) {
+#         founddpath <- append(founddpath, is.discr.path(path = c(path, d), pag = pag))
+#       	if(any(founddpath)==TRUE) break
+#       } ## else : keep 'pag'
+#     }
+#   } ## for( d )
+# 
+#   if(any(founddpath)==TRUE) return(TRUE)
+#   else return(FALSE)
+# }## {discr.path}
 
 cond3 <- function(tmp_old,pag,q){
 #need to specify b, c in col coordinates
@@ -251,10 +316,11 @@ pag <- tmp_old ### !!! since is.discr.path is written with 'pag', replace that w
 indA <- which((pag[b, ] == 2 & pag[, b] != 0) & (pag[c, ] == 3 & pag[, c] == 2))
 if(length(indA)==0) return(TRUE) #if indA is empty return false
 for(a in indA){
-	founddpath <- c()
-	pathexists <- c()
-	pathexists <- append(pathexists, is.discr.path(path=c(c,b,a),pag=pag))
-	if(any(pathexists)==TRUE) return(FALSE)
+	# founddpath <- c()
+	# pathexists <- c()
+	# pathexists <- append(pathexists, is.discr.path(path=c(c,b,a),pag=pag))
+	# if(any(pathexists)==TRUE) return(FALSE)
+  if(minDiscrPath.TF(c(a,b,c),pag)) return(FALSE) ## modified by DMalinsky 08.2024
 }
 return(TRUE)
 }
@@ -438,32 +504,32 @@ return(bigmaglist)
 
 } # end function listMags
 
-
-is.visible <- function(a,b,g){
-	#checking edge from a to b (need to have previously checked that there is a directed edge from a to b)
-	#if there is a vertex c not adjacent to b such that c has an arrowhead into a, then return true
-	if (any(g[,a]==2)){ # there is at least one C*->A
-		cd.ind <- which(g[,a]==2) + (nrow(g)*(a-1)) # list of positions of variables with arrowheads into A
-		cd.ind2 <- which(g==2, arr.ind=TRUE, useNames=FALSE)
-		cd.ind.a <- subset(cd.ind2,cd.ind2[,2]==a)
-		for(f in cd.ind){
-			cd.xy <- cd.ind.a[which(cd.ind==f),] # cd.xy[1] is i coordinate, cd.xy[2] is j
-			#cat("THERE IS A C*->A *****************", "\n")
-			if(!(g[cd.xy[1],b]!=0 && g[b,cd.xy[1]]!=0)){
-				#cat("BUT NO C*-*B !!!! *****************", "\n")
-				return(TRUE)
-			} # if there is no C*-*B, then the edge is visible
-			else{ 
-				#if there is vertex c such that there is a collider path between c and a that is into a and every non-endpoint vertex on the path is a parent of b, then return true
-				if(is.discr.path(c(b,a,cd.xy[1]),g)) return(TRUE)
-				else next
-			}
-		} 
-		return(FALSE) # for(f in cd.ind)
-	} # if any(g[,a]==2)
-	else return(FALSE)	
-	#else return false
-}
+# DEPRECATED
+# is.visible <- function(a,b,g){
+# 	#checking edge from a to b (need to have previously checked that there is a directed edge from a to b)
+# 	#if there is a vertex c not adjacent to b such that c has an arrowhead into a, then return true
+# 	if (any(g[,a]==2)){ # there is at least one C*->A
+# 		cd.ind <- which(g[,a]==2) + (nrow(g)*(a-1)) # list of positions of variables with arrowheads into A
+# 		cd.ind2 <- which(g==2, arr.ind=TRUE, useNames=FALSE)
+# 		cd.ind.a <- subset(cd.ind2,cd.ind2[,2]==a)
+# 		for(f in cd.ind){
+# 			cd.xy <- cd.ind.a[which(cd.ind==f),] # cd.xy[1] is i coordinate, cd.xy[2] is j
+# 			#cat("THERE IS A C*->A *****************", "\n")
+# 			if(!(g[cd.xy[1],b]!=0 && g[b,cd.xy[1]]!=0)){
+# 				#cat("BUT NO C*-*B !!!! *****************", "\n")
+# 				return(TRUE)
+# 			} # if there is no C*-*B, then the edge is visible
+# 			else{ 
+# 				#if there is vertex c such that there is a collider path between c and a that is into a and every non-endpoint vertex on the path is a parent of b, then return true
+# 				if(is.discr.path(c(b,a,cd.xy[1]),g)) return(TRUE)
+# 				else next
+# 			}
+# 		} 
+# 		return(FALSE) # for(f in cd.ind)
+# 	} # if any(g[,a]==2)
+# 	else return(FALSE)	
+# 	#else return false
+# }
 
 
 remove.visible.edges <- function(x,g){
@@ -473,7 +539,7 @@ remove.visible.edges <- function(x,g){
 	indX5 <- subset(indX4,g[x,indX4[,1]]==2) # only directed edges out of x
 
 	for(i in indX5[,1]){
-		if(is.visible(x,i,g)){
+		if(visibleEdge(g,x,i)){ ## if(is.visible(x,i,g)){ ## modified to use visibleEdge from pcalg 08.2024
 			g[x,i] <- g[i,x] <- 0 # if directed edge out of x is visible, remove it
 		}
 		else next
@@ -811,8 +877,16 @@ lv.ida <- function(x.pos,y.pos,mcov,pag,method="global",nMags=500, localcap=NULL
 		pdsep <- union(reach(x.pos,y.pos,-1,pag),y.pos) ##added y.pos to this set 8/29
 	}
 	if (verbose) cat("Constructed possible-d-sep set", "\n")
-	# Z_i = union of adj, pdes, and pdsep
-	Z_i <- sort(unique(c(adj,pdes,pdsep)))
+  
+  ### %%%%%%% MAJOR BUG FIX 08.2024 %%%%%%%% ###
+  pdsep.possDe <- c()
+  for(i in pdsep){ pdsep.possDe <- c(pdsep.possDe,possibleDe(pag,i))}
+
+  
+	# Z_i = union of adj, pdes, and pdsep ## AND possDe(pdsep)
+  Z_i <- sort(unique(c(adj,pdes,pdsep,pdsep.possDe))) ## Z_i <- sort(unique(c(adj,pdes,pdsep)))
+  ### END BUG FIX ###	
+
 	if (!is.null(localcap) && length(Z_i)>localcap){
 	  cat("WARNING: cannot localize when calculating the effect of ", x.pos, " on ", y.pos, 
 	      ". Z_i is too big. Size of Z_i = ", length(Z_i), ". Returning NA", "\n")
